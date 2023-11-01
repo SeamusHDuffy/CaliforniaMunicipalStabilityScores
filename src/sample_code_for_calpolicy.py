@@ -477,40 +477,4 @@ data = data[identifiers + input_data + gov_kpis + reg_gov_score + scale_gov_scor
 data = sort_cols(data, identifiers + input_data + gov_kpis + reg_gov_score, scale_gov_score)
 
 data.to_pickle(f"{git_dir}/final/final_alldata_cal_sample.pkl")
-data.to_stata(f"{git_dir}/final/final_alldata_cal_sample.dta", write_index=False)
-
-# =============================================================================
-# CHECK DATA
-# =============================================================================
-
-# alt_data = data[identifiers + gov_kpis + reg_gov_score + scale_gov_score].copy()
-# alt_data.set_index(identifiers, inplace=True)
-
-# for column in alt_data.columns:
-#     new_column_name = 'alt_' + column
-#     alt_data.rename(columns={column: new_column_name}, inplace=True)
-
-# alt_data.reset_index(inplace=True)
-
-# check_data = pd.read_pickle("G:\\Shared drives\\StateLocalFinanceFundamentals\\final\\final_alldata_city.pkl")
-# check_data = check_data[identifiers + gov_kpis + reg_gov_score + scale_gov_score]
-# check_data = check_data.merge(alt_data, on = identifiers, how='right')
-
-# column_list = []
-
-# for column in gov_kpis + reg_gov_score + scale_gov_score:
-#     check_data[f"d_{column}"] = 0
-#     check_data.loc[abs(check_data[f"{column}"] - check_data[f"alt_{column}"]) > .001, f"d_{column}"] = 1
-#     check_data[f"diff_{column}"] = np.nan
-#     check_data.loc[check_data[f"d_{column}"] == 1, f"diff_{column}"] = abs(check_data[f"{column}"] - check_data[f"alt_{column}"])
-    
-#     column_list.append(f"{column}")
-#     column_list.append(f"alt_{column}")
-#     column_list.append(f"d_{column}")
-#     column_list.append(f"diff_{column}")
-
-# check_data = check_data[identifiers + column_list]
-# check_data.to_stata("C:\\Users\\shduffy\\OneDrive - Stanford\\Desktop\\cal_check.dta", write_index = False)
-
-
-
+data.to_excel(f"{git_dir}/final/final_alldata_cal_sample.xlsx", index=False)
