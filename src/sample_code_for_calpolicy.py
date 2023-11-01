@@ -129,9 +129,9 @@ selection = data[kpi_dict["gfreserves"]].copy()
 selection['kpi_gfreserves'] = selection['gf_reserves'] / (selection["gf_tot_exp"]-selection["gf_transfers"])
 
 selection.sort_values(by = ['state_fips', 'county_fips', 'place_fips', 'year'], inplace = True)
-selection["unreserved_fund_3"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["gf_reserves"].apply(lambda x: x.shift(3))
-selection["unreserved_fund_2"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["gf_reserves"].apply(lambda x: x.shift(2))
-selection["unreserved_fund_1"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["gf_reserves"].apply(lambda x: x.shift(1))
+selection["unreserved_fund_3"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["gf_reserves"].shift(3)
+selection["unreserved_fund_2"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["gf_reserves"].shift(2)
+selection["unreserved_fund_1"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["gf_reserves"].shift(1)
 selection["d_unreserved_fund_3"] = selection.apply(lambda x: find_change(x['unreserved_fund_3'],x['gf_reserves'],3), axis=1)
 selection["d_unreserved_fund_3"].replace([np.inf, -np.inf], np.nan, inplace=True)
 selection["d_unreserved_fund_2"] = selection.apply(lambda x: find_change(x['unreserved_fund_2'],x['gf_reserves'],2), axis=1)
@@ -221,10 +221,11 @@ kpi_dict.update({"revenuetrend" : ['year', 'state_fips', 'county_fips', 'place_f
 selection = data[ kpi_dict["revenuetrend"]].copy()
 selection["ln_gf_tot_rev"] = np.log(selection["gf_tot_rev"])
 selection["ln_gf_tot_rev"].replace([np.inf, -np.inf], np.nan, inplace=True)
-selection.sort_values(by = ['state_fips', 'year'], inplace = True)
-selection["d3ln_gf_tot_rev"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["ln_gf_tot_rev"].apply(lambda x: np.exp((x - x.shift(3))/3) -1 )
-selection["d2ln_gf_tot_rev"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["ln_gf_tot_rev"].apply(lambda x: np.exp((x - x.shift(2))/2) -1 )
-selection["d1ln_gf_tot_rev"] = selection.groupby(['state_fips', 'county_fips', 'place_fips'])["ln_gf_tot_rev"].apply(lambda x: np.exp((x - x.shift(1))/1) -1 )
+selection.sort_values(by = ['state_fips', 'county_fips', 'place_fips', 'year'], inplace = True)
+
+selection["d3ln_gf_tot_rev"] = np.exp((selection['ln_gf_tot_rev'] - selection.groupby(['state_fips', 'county_fips', 'place_fips'])["ln_gf_tot_rev"].shift(3))/3) - 1
+selection["d2ln_gf_tot_rev"] = np.exp((selection['ln_gf_tot_rev'] - selection.groupby(['state_fips', 'county_fips', 'place_fips'])["ln_gf_tot_rev"].shift(2))/2) - 1
+selection["d1ln_gf_tot_rev"] = np.exp((selection['ln_gf_tot_rev'] - selection.groupby(['state_fips', 'county_fips', 'place_fips'])["ln_gf_tot_rev"].shift(1))/1) - 1
 selection.loc[selection["d3ln_gf_tot_rev"].isna(), "d3ln_gf_tot_rev"] = selection.loc[selection["d3ln_gf_tot_rev"].isna(), "d2ln_gf_tot_rev"]
 selection.loc[selection["d3ln_gf_tot_rev"].isna(), "d3ln_gf_tot_rev"] = selection.loc[selection["d3ln_gf_tot_rev"].isna(), "d1ln_gf_tot_rev"]
 selection = selection[['state_fips', 'county_fips', 'place_fips','year', "d3ln_gf_tot_rev"]].copy()
@@ -477,3 +478,39 @@ data = sort_cols(data, identifiers + input_data + gov_kpis + reg_gov_score, scal
 
 data.to_pickle(f"{git_dir}/final/final_alldata_cal_sample.pkl")
 data.to_stata(f"{git_dir}/final/final_alldata_cal_sample.dta", write_index=False)
+
+# =============================================================================
+# CHECK DATA
+# =============================================================================
+
+# alt_data = data[identifiers + gov_kpis + reg_gov_score + scale_gov_score].copy()
+# alt_data.set_index(identifiers, inplace=True)
+
+# for column in alt_data.columns:
+#     new_column_name = 'alt_' + column
+#     alt_data.rename(columns={column: new_column_name}, inplace=True)
+
+# alt_data.reset_index(inplace=True)
+
+# check_data = pd.read_pickle("G:\\Shared drives\\StateLocalFinanceFundamentals\\final\\final_alldata_city.pkl")
+# check_data = check_data[identifiers + gov_kpis + reg_gov_score + scale_gov_score]
+# check_data = check_data.merge(alt_data, on = identifiers, how='right')
+
+# column_list = []
+
+# for column in gov_kpis + reg_gov_score + scale_gov_score:
+#     check_data[f"d_{column}"] = 0
+#     check_data.loc[abs(check_data[f"{column}"] - check_data[f"alt_{column}"]) > .001, f"d_{column}"] = 1
+#     check_data[f"diff_{column}"] = np.nan
+#     check_data.loc[check_data[f"d_{column}"] == 1, f"diff_{column}"] = abs(check_data[f"{column}"] - check_data[f"alt_{column}"])
+    
+#     column_list.append(f"{column}")
+#     column_list.append(f"alt_{column}")
+#     column_list.append(f"d_{column}")
+#     column_list.append(f"diff_{column}")
+
+# check_data = check_data[identifiers + column_list]
+# check_data.to_stata("C:\\Users\\shduffy\\OneDrive - Stanford\\Desktop\\cal_check.dta", write_index = False)
+
+
+
