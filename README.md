@@ -6,12 +6,11 @@ Code, data to replicate the financial rankings of 25 California cities, as repor
 
 ## INSTRUCTIONS
 
-<ol>
-  <li>Update the data in the ```/int/cal_sample.xlsx```, making sure to include state_fips, county_fips, and place_fips for each city in the sample. Make sure that all fields in the file are covered, and expressed in millions USD (see description for ```/int/cal_sample.xlsx``` for more details)</li>
-  <li>(Optional) Change scoring, weighting parameters in ```/int/scoring_parameters.xlsx``` as desired</li>
-  <li>Add your local directory to the ```/src/sample_code_for_calpolicy.py```</li>
-  <li>Run the code and collect the output in either ```/final/final_alldata_cal_sample.xlsx``` or ```/final/final_alldata_cal_sample.pkl```</li>
-</ol>
+
+1. Update the data in the ```/int/cal_sample.xlsx```, making sure to include state_fips, county_fips, and place_fips for each city in the sample. Make sure that all fields in the file are covered, and expressed in millions USD (see description for ```/int/cal_sample.xlsx``` for more details)
+2. (Optional) Change scoring, weighting parameters in ```/int/scoring_parameters.xlsx``` as desired
+3. Add your local directory to the ```/src/sample_code_for_calpolicy.py```
+4. Run the code and collect the output in either ```/final/final_alldata_cal_sample.xlsx``` or ```/final/final_alldata_cal_sample.pkl```
 
 ## GUIDE TO FILES
 
