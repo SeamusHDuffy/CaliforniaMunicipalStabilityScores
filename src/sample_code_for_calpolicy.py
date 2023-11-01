@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-git_dir = "C:\\Users\\shduffy\\OneDrive - Stanford\\Documents\\CaliforniaMunicipalStabilityScores"
+git_dir = "YOUR GITHUB DIRECTORY HERE"
 
 def sort_cols(df, explicit_cols , end_cols = []):
     othercols = [col for col in df.columns if not col in explicit_cols and not col in end_cols ]
