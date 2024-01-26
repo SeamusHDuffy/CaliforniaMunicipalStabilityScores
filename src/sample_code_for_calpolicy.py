@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-git_dir = "YOUR GITHUB DIRECTORY HERE"
+git_dir = "C:\\Users\\shduffy\\OneDrive - Stanford\\Documents\\CaliforniaMunicipalStabilityScores"
 
 def sort_cols(df, explicit_cols , end_cols = []):
     othercols = [col for col in df.columns if not col in explicit_cols and not col in end_cols ]
@@ -147,21 +147,34 @@ selection.loc[(abs(selection['kpi_gfreserves']) < 0),'kpi_gfreserves'] = 0
 selection.loc[(abs(selection['kpi_gfreserves']) > 5),'kpi_gfreserves'] = np.nan
 selection.loc[(abs(selection['kpi_unrsrvdgrwth']) > 5),'kpi_unrsrvdgrwth'] = np.nan
 
-selection["main"] = selection['kpi_gfreserves'].apply(lambda x: set_score(x, kpi_pars["gfreserves"]))
+selection.loc[(selection['kpi_gfreserves'].notna()), "main"] = selection['kpi_gfreserves'].apply(lambda x: set_score(x, kpi_pars["gfreserves"]))
 selection.loc[(selection['kpi_unrsrvdgrwth'].notna()) & (selection['kpi_gfreserves'].notna()), "diff"] = selection.apply(lambda x: set_diff(x['kpi_unrsrvdgrwth'], x['kpi_gfreserves'],diff_pars), axis=1)
 selection.loc[(selection['main'].notna()) & (selection['diff'].notna()), 'gfreserves_score'] = np.maximum((selection['main'] + selection['diff']), 0)
+selection.loc[(selection['main'].notna()) & (selection['diff'].isna()), 'gfreserves_score'] = np.maximum((selection['main']), 0)
+
+selection["kpi_gfreserves"].replace([np.inf, -np.inf], np.nan, inplace=True)
+selection["kpi_unrsrvdgrwth"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['gfreserves_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,3)
-axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("Reserves over exp.")
-axes[1].hist(selection['kpi_unrsrvdgrwth'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Reserves growth")
-axes[2].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[2].set_title("Score (higher is better)")
-fig.suptitle("GF Reserves")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
+if pd.isna(selection['kpi_unrsrvdgrwth']).all():
+    fig, axes = plt.subplots(1,2)
+    axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
+    axes[0].set_title("Reserves over exp.")
+    axes[1].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
+    axes[1].set_title("Score (higher is better)")
+    fig.suptitle("GF Reserves")
+    plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
+else:
+    fig, axes = plt.subplots(1,3)
+    axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
+    axes[0].set_title("Reserves over exp.")
+    axes[1].hist(selection['kpi_unrsrvdgrwth'], bins = 30, edgecolor='black', linewidth=1)
+    axes[1].set_title("Reserves growth")
+    axes[2].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
+    axes[2].set_title("Score (higher is better)")
+    fig.suptitle("GF Reserves")
+    plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
 
 selection.loc[(selection['gfreserves_score'].notna()), 'gfreserves_tot'] = max(kpi_pars["gfreserves"]["max_score"],kpi_pars["gfreserves"]["min_score"])
 
@@ -175,6 +188,8 @@ selection = data[ kpi_dict["debtburden"]].copy()
 selection["kpi_debtburden"] = (selection['gov_lt_debt']) / (selection['gov_tot_rev'])
 selection['debtburden_score'] = np.nan
 selection["debtburden_score"] = selection['kpi_debtburden'].apply(lambda x: set_score(x, kpi_pars["debtburden"]))
+
+selection["kpi_debtburden"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['debtburden_score'].isna(), "year"].value_counts())
 
@@ -199,6 +214,8 @@ selection = data[ kpi_dict["liquidity"]].copy()
 selection["kpi_liquidity"] = selection[['gf_cash','gf_invest']].sum(axis=1) / selection['gf_tot_liab']
 selection['liquidity_score'] = np.nan
 selection["liquidity_score"] = selection['kpi_liquidity'].apply(lambda x: set_score(x, kpi_pars["liquidity"]))
+
+selection["kpi_liquidity"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['liquidity_score'].isna(), "year"].value_counts())
 
@@ -234,6 +251,8 @@ selection.loc[(abs(selection['kpi_revenuegrowth']) > .5),'kpi_revenuegrowth'] = 
 selection['revenuegrowth_score'] = np.nan
 selection.loc[selection['kpi_revenuegrowth'].notna(), "revenuegrowth_score"] = selection['kpi_revenuegrowth'].apply(lambda x: set_score(x, kpi_pars["revenuegrowth"]))
 
+selection["kpi_revenuegrowth"].replace([np.inf, -np.inf], np.nan, inplace=True)
+
 print(selection.loc[~selection['revenuegrowth_score'].isna(), "year"].value_counts())
 
 fig, axes = plt.subplots(1,2)
@@ -261,6 +280,8 @@ selection["pensionobligations_score"] = selection['kpi_pensionobligations'].appl
 
 selection['kpi_pensionobligations'].describe()
 
+selection["kpi_pensionobligations"].replace([np.inf, -np.inf], np.nan, inplace=True)
+
 print(selection.loc[~selection['pensionobligations_score'].isna(), "year"].value_counts())
 
 fig, axes = plt.subplots(1,2)
@@ -283,6 +304,8 @@ selection = data[kpi_dict["pensionfunding"]].copy()
 selection["kpi_pensionfunding"] = selection['pension_fnp'] / selection['pension_tpl']
 selection['pensionfunding_score'] = np.nan
 selection["pensionfunding_score"] = selection['kpi_pensionfunding'].apply(lambda x: set_score(x, kpi_pars["pensionfunding"]))
+
+selection["kpi_pensionfunding"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['pensionfunding_score'].isna(), "year"].value_counts())
 
@@ -310,6 +333,8 @@ selection["pensionadc_score"] = selection['kpi_pensionadc'].apply(lambda x: set_
 
 selection['kpi_pensionadc'].describe()
 
+selection["kpi_pensionadc"].replace([np.inf, -np.inf], np.nan, inplace=True)
+
 print(selection.loc[~selection['pensionadc_score'].isna(), "year"].value_counts())
 
 fig, axes = plt.subplots(1,2)
@@ -336,6 +361,8 @@ selection["kpi_opebobligation"] = selection["netopebobligation"] / (selection["g
 selection['opebobligation_score'] = np.nan
 selection["opebobligation_score"] = selection['kpi_opebobligation'].apply(lambda x: set_score(x, kpi_pars["opebobligation"]))
 
+selection["kpi_opebobligation"].replace([np.inf, -np.inf], np.nan, inplace=True)
+
 print(selection.loc[~selection['opebobligation_score'].isna(), "year"].value_counts())
 
 fig, axes = plt.subplots(1,2)
@@ -351,6 +378,8 @@ selection.loc[(selection['opebobligation_score'].notna()), 'opebobligation_tot']
 selection["kpi_opebfunding"] = selection["opeb_fnp"] / selection["opeb_tot_liab"]
 selection['opebfunding_score'] = np.nan
 selection["opebfunding_score"] = selection['kpi_opebfunding'].apply(lambda x: set_score(x, kpi_pars["opebfunding"]))
+
+selection["kpi_opebfunding"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['opebfunding_score'].isna(), "year"].value_counts())
 
@@ -375,6 +404,8 @@ selection = data[kpi_dict["networth"]].copy()
 selection["kpi_unrestrictednetassets"] = selection["gov_unrestricted_net_position"] / (selection["gov_tot_rev"])
 selection['unrestrictednetassets_score'] = np.nan
 selection["unrestrictednetassets_score"] = selection['kpi_unrestrictednetassets'].apply(lambda x: set_score(x, kpi_pars["unrestrictednetassets"]))
+
+selection["kpi_unrestrictednetassets"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['unrestrictednetassets_score'].isna(), "year"].value_counts())
 
