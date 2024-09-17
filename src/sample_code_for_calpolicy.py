@@ -5,14 +5,14 @@ Created on Tue Oct 31 16:32:52 2023
 @author: shduffy
 """
 
-from IPython import get_ipython
-get_ipython().run_line_magic('reset' ,'-sf')
+#from IPython import get_ipython
+#get_ipython().run_line_magic('reset' ,'-sf')
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-git_dir = "C:\\Users\\shduffy\\OneDrive - Stanford\\Documents\\CaliforniaMunicipalStabilityScores"
+git_dir = "/Users/olivergiesecke/Downloads/CaliforniaMunicipalStabilityScores-main"
 
 def sort_cols(df, explicit_cols , end_cols = []):
     othercols = [col for col in df.columns if not col in explicit_cols and not col in end_cols ]
@@ -32,23 +32,23 @@ for index, row in kpi_data.iterrows():
     kpi_pars[entry_name] = entry_data
 
 def set_score(ratio, parameters):
-    global score
     slope = (parameters["max_score"]-parameters["min_score"])/(parameters["max_cutoff"]-parameters["min_cutoff"])
     intercept=parameters["min_score"]-slope*parameters["min_cutoff"]
-    if ratio != "nan":
-        score = max(parameters["max_score"],parameters["min_score"])
-    if ratio >= parameters["min_cutoff"] and ratio <= parameters["max_cutoff"]:
-        score=slope*ratio+intercept
-    elif ratio < parameters["min_cutoff"]:
-        score=parameters["min_score"]
-    elif ratio > parameters["max_cutoff"]:
-        score=parameters["max_score"]
+    if str(ratio) == "nan":
+        score = np.nan
+    else:
+        #score = max(parameters["max_score"], parameters["min_score"])
+        if ratio >= parameters["min_cutoff"] and ratio <= parameters["max_cutoff"]:
+            score=slope*ratio+intercept
+        elif ratio < parameters["min_cutoff"]:
+            score=parameters["min_score"]
+        elif ratio > parameters["max_cutoff"]:
+            score=parameters["max_score"]
     return score
 
 diff_pars = {"0_1_months": -0.5, "1_2_months": -1, "2_3_months": -1.5, "3_4_months": -2, "4_5_months": -3, "5_6_months": -4, "6_7_months": -4.5, "7_8_months": -5, "8_9_months": -5.5}
 
 def set_diff(ratio, indicator, parameters):
-    global diff
     time = indicator*12
     if time<0 or time>9:
         diff = 0
@@ -110,7 +110,8 @@ def find_change(old,new,length):
 # LOAD DATA    
 # =============================================================================
  
-data = pd.read_excel(f"{git_dir}/int/cal_sample.xlsx", dtype = {'state_fips': str, 'county_fips': str, 'place_fips': str})
+data = pd.read_excel(f"{git_dir}/int/caldata2022.xlsx", dtype = {'state_fips': str, 'county_fips': str, 
+                                                                 'place_fips': str},keep_default_na=True)
 
 # =============================================================================
 # KPI
@@ -157,24 +158,24 @@ selection["kpi_unrsrvdgrwth"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['gfreserves_score'].isna(), "year"].value_counts())
 
-if pd.isna(selection['kpi_unrsrvdgrwth']).all():
-    fig, axes = plt.subplots(1,2)
-    axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
-    axes[0].set_title("Reserves over exp.")
-    axes[1].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
-    axes[1].set_title("Score (higher is better)")
-    fig.suptitle("GF Reserves")
-    plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
-else:
-    fig, axes = plt.subplots(1,3)
-    axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
-    axes[0].set_title("Reserves over exp.")
-    axes[1].hist(selection['kpi_unrsrvdgrwth'], bins = 30, edgecolor='black', linewidth=1)
-    axes[1].set_title("Reserves growth")
-    axes[2].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
-    axes[2].set_title("Score (higher is better)")
-    fig.suptitle("GF Reserves")
-    plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
+#if pd.isna(selection['kpi_unrsrvdgrwth']).all():
+#    fig, axes = plt.subplots(1,2)
+#    axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
+#    axes[0].set_title("Reserves over exp.")
+#    axes[1].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
+#    axes[1].set_title("Score (higher is better)")
+#    fig.suptitle("GF Reserves")
+#    plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
+#else:
+#    fig, axes = plt.subplots(1,3)
+#    axes[0].hist(selection['kpi_gfreserves'], bins = 30, edgecolor='black', linewidth=1)
+#   axes[0].set_title("Reserves over exp.")
+#    axes[1].hist(selection['kpi_unrsrvdgrwth'], bins = 30, edgecolor='black', linewidth=1)
+#    axes[1].set_title("Reserves growth")
+#    axes[2].hist(selection['gfreserves_score'], bins = 30, edgecolor='black', linewidth=1)
+#    axes[2].set_title("Score (higher is better)")
+#    fig.suptitle("GF Reserves")
+#    plt.savefig(f"{git_dir}/tables_figures/kpi_hist_gfreserves_state.png")
 
 selection.loc[(selection['gfreserves_score'].notna()), 'gfreserves_tot'] = max(kpi_pars["gfreserves"]["max_score"],kpi_pars["gfreserves"]["min_score"])
 
@@ -193,13 +194,13 @@ selection["kpi_debtburden"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['debtburden_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_debtburden'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("Debt over total gov rev.")
-axes[1].hist(selection['debtburden_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Debt Burden")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_debtburden_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_debtburden'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("Debt over total gov rev.")
+#axes[1].hist(selection['debtburden_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Debt Burden")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_debtburden_state.png")
 
 selection.loc[(selection['debtburden_score'].notna()), 'debtburden_tot'] = max(kpi_pars["debtburden"]["max_score"],kpi_pars["debtburden"]["min_score"])
 
@@ -219,13 +220,13 @@ selection["kpi_liquidity"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['liquidity_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_liquidity'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("Cash over liabilities")
-axes[1].hist(selection['liquidity_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Liquidity")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_liquidity_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_liquidity'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("Cash over liabilities")
+#axes[1].hist(selection['liquidity_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Liquidity")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_liquidity_state.png")
 
 selection.loc[(selection['liquidity_score'].notna()), 'liquidity_tot'] = max(kpi_pars["liquidity"]["max_score"],kpi_pars["liquidity"]["min_score"])
 
@@ -255,13 +256,13 @@ selection["kpi_revenuegrowth"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['revenuegrowth_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_revenuegrowth'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("Revenue Growth")
-axes[1].hist(selection['revenuegrowth_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Rev Growth")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_revgrowth_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_revenuegrowth'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("Revenue Growth")
+#axes[1].hist(selection['revenuegrowth_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Rev Growth")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_revgrowth_state.png")
 
 selection.loc[(selection['revenuegrowth_score'].notna()), 'revenuegrowth_tot'] = max(kpi_pars["revenuegrowth"]["max_score"],kpi_pars["revenuegrowth"]["min_score"])
 
@@ -284,13 +285,13 @@ selection["kpi_pensionobligations"].replace([np.inf, -np.inf], np.nan, inplace=T
 
 print(selection.loc[~selection['pensionobligations_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_pensionobligations'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("NPL over total gov rev.")
-axes[1].hist(selection['pensionobligations_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Pension Ob")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_pensionob_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_pensionobligations'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("NPL over total gov rev.")
+#axes[1].hist(selection['pensionobligations_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Pension Ob")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_pensionob_state.png")
 
 selection.loc[(selection['pensionobligations_score'].notna()), 'pensionobligations_tot'] = max(kpi_pars["pensionobligations"]["max_score"],kpi_pars["pensionobligations"]["min_score"])
 
@@ -309,13 +310,13 @@ selection["kpi_pensionfunding"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['pensionfunding_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_pensionfunding'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("FNP/TPL")
-axes[1].hist(selection['pensionfunding_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Pension Funding")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_pensionfund_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_pensionfunding'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("FNP/TPL")
+#axes[1].hist(selection['pensionfunding_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Pension Funding")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_pensionfund_state.png")
 
 selection.loc[(selection['pensionfunding_score'].notna()), 'pensionfunding_tot'] = max(kpi_pars["pensionfunding"]["max_score"],kpi_pars["pensionfunding"]["min_score"])
 
@@ -337,13 +338,13 @@ selection["kpi_pensionadc"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['pensionadc_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_pensionadc'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("ADC over total gov rev.")
-axes[1].hist(selection['pensionadc_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Pension Cost")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_pensionadc_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_pensionadc'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("ADC over total gov rev.")
+#axes[1].hist(selection['pensionadc_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Pension Cost")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_pensionadc_state.png")
 
 selection.loc[(selection['pensionadc_score'].notna()), 'pensionadc_tot'] = max(kpi_pars["pensionadc"]["max_score"],kpi_pars["pensionadc"]["min_score"])
 
@@ -365,13 +366,13 @@ selection["kpi_opebobligation"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['opebobligation_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_opebobligation'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("OPEB liability over total gov rev.")
-axes[1].hist(selection['opebobligation_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("OPEB ob")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_opebob_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_opebobligation'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("OPEB liability over total gov rev.")
+#axes[1].hist(selection['opebobligation_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("OPEB ob")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_opebob_state.png")
 
 selection.loc[(selection['opebobligation_score'].notna()), 'opebobligation_tot'] = max(kpi_pars["opebobligation"]["max_score"],kpi_pars["opebobligation"]["min_score"])
 
@@ -383,13 +384,13 @@ selection["kpi_opebfunding"].replace([np.inf, -np.inf], np.nan, inplace=True)
 
 print(selection.loc[~selection['opebfunding_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_opebfunding'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("OPEB asset over OPEB liability")
-axes[1].hist(selection['opebfunding_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("OPEB funding")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_opebfund_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_opebfunding'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("OPEB asset over OPEB liability")
+#axes[1].hist(selection['opebfunding_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("OPEB funding")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_opebfund_state.png")
 
 selection.loc[(selection['opebfunding_score'].notna()), 'opebfunding_tot'] = max(kpi_pars["opebfunding"]["max_score"],kpi_pars["opebfunding"]["min_score"])
 
@@ -409,13 +410,13 @@ selection["kpi_unrestrictednetassets"].replace([np.inf, -np.inf], np.nan, inplac
 
 print(selection.loc[~selection['unrestrictednetassets_score'].isna(), "year"].value_counts())
 
-fig, axes = plt.subplots(1,2)
-axes[0].hist(selection['kpi_unrestrictednetassets'], bins = 30, edgecolor='black', linewidth=1)
-axes[0].set_title("UNA over governmentwide revenue")
-axes[1].hist(selection['unrestrictednetassets_score'], bins = 30, edgecolor='black', linewidth=1)
-axes[1].set_title("Score (higher is better)")
-fig.suptitle("Unrestricted Net Assets")
-plt.savefig(f"{git_dir}/tables_figures/kpi_hist_unrestrictednetassets_state.png")
+#fig, axes = plt.subplots(1,2)
+#axes[0].hist(selection['kpi_unrestrictednetassets'], bins = 30, edgecolor='black', linewidth=1)
+#axes[0].set_title("UNA over governmentwide revenue")
+#axes[1].hist(selection['unrestrictednetassets_score'], bins = 30, edgecolor='black', linewidth=1)
+#axes[1].set_title("Score (higher is better)")
+#fig.suptitle("Unrestricted Net Assets")
+#plt.savefig(f"{git_dir}/tables_figures/kpi_hist_unrestrictednetassets_state.png")
 
 selection.loc[(selection['unrestrictednetassets_score'].notna()), 'unrestrictednetassets_tot'] = max(kpi_pars["unrestrictednetassets"]["max_score"],kpi_pars["unrestrictednetassets"]["min_score"])
 
@@ -467,7 +468,7 @@ kpi_df.loc[kpi_df['d_tot'] < 5, 'final_score'] = np.nan
 
 kpi_df['temp1'] = kpi_df['year'].where(kpi_df['final_score'].notnull())
 kpi_df['temp2'] = kpi_df.groupby(['state_fips', 'county_fips', 'place_fips'])['temp1'].transform('min')
-kpi_df.loc[kpi_df['year'] == kpi_df['temp2'], 'final_score'] = np.nan
+# kpi_df.loc[kpi_df['year'] == kpi_df['temp2'], 'final_score'] = np.nan
 
 kpi_df.drop(columns = ['gfreserves_tot','debtburden_tot','liquidity_tot','revenuegrowth_tot','pensionobligations_tot','scale_pensionobligations_tot',
                                         'pensionfunding_tot','scale_pensionfunding_tot','pensionadc_tot','scale_pensionadc_tot','opebobligation_tot',
@@ -507,5 +508,5 @@ data = data[identifiers + input_data + gov_kpis + reg_gov_score + scale_gov_scor
 
 data = sort_cols(data, identifiers + input_data + gov_kpis + reg_gov_score, scale_gov_score)
 
-data.to_pickle(f"{git_dir}/final/final_alldata_cal_sample.pkl")
-data.to_excel(f"{git_dir}/final/final_alldata_cal_sample.xlsx", index=False)
+data.to_pickle(f"{git_dir}/final/final_caldata2022.pkl")
+data.to_excel(f"{git_dir}/final/final_caldata2022.xlsx", index=False)
